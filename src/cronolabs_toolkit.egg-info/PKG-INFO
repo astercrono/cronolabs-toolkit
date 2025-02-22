@@ -1,0 +1,5 @@
+Metadata-Version: 2.2
+Name: cronolabs-toolkit
+Version: 2025.2.20
+License-File: LICENSE
+Requires-Dist: httpx

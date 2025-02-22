@@ -1,0 +1,13 @@
+workstation:com.bitwarden.desktop
+workstation:com.discordapp.Discord
+workstation:com.github.iwalton3.jellyfin-media-player
+workstation:com.jgraph.drawio.desktop
+workstation:com.slack.Slack
+workstation:com.transmissionbt.Transmission
+workstation:com.usebruno.Bruno
+workstation:dog.unix.cantata.Cantata
+workstation:im.riot.Riot
+workstation:md.obsidian.Obsidian
+workstation:org.gimp.GIMP
+workstation:org.jitsi.jitsi-meet
+workstation:org.libretro.RetroArch

@@ -1,0 +1,15 @@
+all:cockpit
+all:vim
+all:neovim
+all:git
+workstation:cifs-utils
+workstation:wezterm
+workstation:flatpak
+workstation:yt-dlp
+workstation:xmms2
+workstation:fastfetch
+workstation:jq
+workstation:wget2
+workstation:tree
+workstation:sqlite
+workstation:openssh
