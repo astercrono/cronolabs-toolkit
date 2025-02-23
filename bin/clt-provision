@@ -4,35 +4,24 @@ subcommands=("fedora")
 
 SUBCOMMAND="$1"
 GROUP="all"
+CATEGORY="all"
+
+shift
 
 if [[ ! " ${subcommands[@]} " =~ " $SUBCOMMAND" ]] || [ -z "$SUBCOMMAND" ]; then
 	echo "Invalid system type: $SUBCOMMAND"
 	exit 1
 fi
 
-
-while getopts "g:" opt; do
+while getopts "g:c:" opt; do
         case "${opt}" in
-        e) GROUP="${OPTARG}" ;;
+        g) GROUP="${OPTARG}" ;;
+        c) CATEGORY="${OPTARG}" ;;
         esac
 done
 shift $((OPTIND - 1))
 
-
-
 sudo -v
-
-#function dnf_update() {
-#	echo "sudo dnf update -y"
-#}
-
-#function dnf_install() {
-#	echo "sudo dnf install -y $@"
-#}
-
-#function dnf_copr_enable() {
-#	echo ""
-#}
 
 function install_from_file_single() {
 	filename="$1"
@@ -42,16 +31,14 @@ function install_from_file_single() {
 		read -ra split <<< "$line"
 
 		install_group=${split[0]}
-		install_package=${split[1]}
+		install_category=${split[1]}
+		install_package=${split[2]}
 
-		if [[ "$GROUP" != "all" ]] && [[ "$GROUP" != "$install_group" ]]; then
-			continue
+		if [[ "$install_group" == "all" ]] || [[ "$GROUP" == "$install_group" ]]; then
+			if [[ "$install_category" == "all" ]] || [[ "$CATEGORY" == "$install_category" ]]; then
+				eval "$@ $install_package"
+			fi
 		fi
-
-		# echo "Group = $install_group, Install Package = $install_package"
-		# echo "$INSTALL_CMD $@ $install_package"
-		echo "$@ $install_package" # TODO: flip to eval
-
 	done < "$CLT_BIN/$filename"
 }
 
@@ -65,43 +52,69 @@ function install_from_file_batch() {
 		read -ra split <<< "$line"
 
 		install_group=${split[0]}
-		install_package=${split[1]}
+		install_category=${split[1]}
+		install_package=${split[2]}
 
-		if [[ "$GROUP" != "$install_group" ]]; then
-			continue
+		if [[ "$install_group" == "all" ]] || [[ "$GROUP" == "$install_group" ]]; then
+			if [[ "$install_category" == "all" ]] || [[ "$CATEGORY" == "$install_category" ]]; then
+				install_batch+=($install_package)
+			fi
 		fi
-
-		# echo "Group = $install_group, Install Package = $install_package"
-		install_batch+=($install_package)
 	done < "$CLT_BIN/$filename"
 
-	# echo "Package Batch = ${install_batch[@]}"
-	echo "$@ ${install_batch[@]}" # TODO: flip to eval
+	eval "$@ ${install_batch[@]}"
 }
 
-# TODO: flip commands from echo to eval
-case $SUBCOMMAND in
-fedora)
-	echo "sudo dnf update -y"
-	
-	if [[ "$GROUP" == "workstation" ]]; then
-		echo "sudo dnf copr enable @neurofedora/neurofedora-extra"
-		echo "sudo dnf update -y"
-	fi
-	
-	install_from_file_batch "dnf-list.txt" "sudo dnf install -y"
+function install_packages() {
+	case $SUBCOMMAND in
+	fedora)
+		sudo dnf update -y
+		
+		if [[ "$GROUP" == "workstation" ]]; then
+			sudo dnf copr -y enable wezfurlong/wezterm-nightly
+			sudo dnf update -y
+		fi
+		
+		install_from_file_batch "dnf-list.txt" "sudo dnf install -y"
 
-	if [[ "$GROUP" == "workstation" ]]; then
-		echo "flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo"
-		install_from_file_single "flatpak-list.txt" "flatpak install -y"
+		if [[ "$GROUP" == "workstation" ]]; then
+			flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+			install_from_file_single "flatpak-list.txt" "flatpak install -y"
+		fi
+
+		;;
+	debian) 
+		echo "Unsupported system type"
+		;;
+	*) 
+		echo "Unknown system type"
+		;;
+	esac
+}
+
+function config_nvim() {
+	echo "installing Neovim config"
+
+	config_dir="$HOME/.config"
+	nvim_dir="$config_dir/nvim"
+	mkdir -p $config_dir
+
+	# TODO: only do this if it is not already setup
+	if [ -d "$nvim_dir" ]; then
+		mv $nvim_dir "$nvim_dir-backup"
 	fi
 
-	;;
-debian) 
-	echo "Unsupported system type"
-	;;
-*) 
-	echo "Unknown system type"
-	;;
-esac
+	ln -s $CLT_BASE/resource/nvim $nvim_dir
+}
+
+#function config_wezterm() {
+#	wez_config="$HOME/"
+#	echo "installing wezterm config"
+#}
+
+install_packages
+
+#if [[ "$GROUP" == "workstation" ]]; then
+#	config_nvim
+#fi
 

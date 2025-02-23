@@ -2,6 +2,9 @@
 
 export CLT_BIN=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
 cd $CLT_BIN
+cd ..
+export CLT_BASE="$(pwd)"
+cd $CLT_BIN
 
 subcommands=("help" "install" "provision")
 
