@@ -1,13 +1,17 @@
 workstation:all:com.bitwarden.desktop
 workstation:all:com.discordapp.Discord
+workstation:all:fedora com.github.hugolabe.Wike
 workstation:all:com.github.iwalton3.jellyfin-media-player
 workstation:all:com.jgraph.drawio.desktop
+workstation:all:com.mattjakeman.ExtensionManager
 workstation:all:com.slack.Slack
-workstation:all:flathub com.transmissionbt.Transmission
 workstation:all:com.usebruno.Bruno
 workstation:all:dog.unix.cantata.Cantata
+workstation:all:flathub com.transmissionbt.Transmission
+workstation:all:flathub org.gimp.GIMP
 workstation:all:im.riot.Riot
 workstation:all:md.obsidian.Obsidian
-workstation:all:flathub org.gimp.GIMP
 workstation:all:org.jitsi.jitsi-meet
 workstation:all:org.libretro.RetroArch
+workstation:all:org.jitsi.jitsi-meet
+workstation:all:org.signal.Signal

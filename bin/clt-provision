@@ -108,13 +108,22 @@ function config_nvim() {
 	ln -s $CLT_BASE/resource/nvim $nvim_dir
 }
 
-#function config_wezterm() {
-#	wez_config="$HOME/"
-#	echo "installing wezterm config"
-#}
+function config_wezterm() {
+	wez_config="$HOME/.wezterm.lua"
+	echo "installing wezterm config"
+
+	if [ -L "$wez_config" ]; then
+		rm "$wez_config"
+	elif [ -f "$wez_config" ]; then
+		mv $wez_config "$wez_config-backup"
+	fi
+
+	ln -s $CLT_BASE/resource/wezterm/.wezterm.lua $wez_config
+}
 
 install_packages
 
 if [[ "$GROUP" == "workstation" ]]; then
 	config_nvim
+	config_wezterm
 fi

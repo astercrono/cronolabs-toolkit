@@ -6,17 +6,16 @@ cd ..
 export CLT_BASE="$(pwd)"
 cd $CLT_BIN
 
-subcommands=("help" "install" "provision")
+subcommands=("help" "install" "provision" "update")
 
 subcommand_arg="$1"
 valid_subcommand=false
 for item in "${subcommands[@]}"; do
-    if [[ "$item" == "$subcommand_arg" ]]; then
-        valid_subcommand=true
-        break
-    fi
+	if [[ "$item" == "$subcommand_arg" ]]; then
+		valid_subcommand=true
+		break
+	fi
 done
-
 
 if [ $valid_subcommand = false ]; then
 	echo "Invalid subcommand $1"
@@ -25,9 +24,20 @@ fi
 
 shift
 
-if [[ "$subcommand_arg" == "provision" ]]; then
-	./clt-provision $@
-elif [[ "$subcommand_arg" == "install" ]]; then
+case $subcommand_arg in
+install)
 	./clt-install $@
-fi
-
+	;;
+provision)
+	./clt-provision $@
+	;;
+update)
+	./clt-update $@
+	;;
+help)
+	cat help.txt
+	;;
+*)
+	echo "Unknown system type"
+	;;
+esac

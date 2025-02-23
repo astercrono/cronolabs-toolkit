@@ -14,9 +14,11 @@ workstation:all:fastfetch
 workstation:all:fd-find
 workstation:all:ffmpeg
 workstation:all:flatpak
+workstation:all:gnome-tweaks
 workstation:all:ripgrep
 workstation:all:vlc
 workstation:all:wezterm
 workstation:all:xmms2
 workstation:all:yt-dlp
 workstation:desktop:steam
+workstation:all:ruby
