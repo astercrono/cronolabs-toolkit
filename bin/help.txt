@@ -10,6 +10,7 @@ Commands:
     update      Updates the project to the latest version.
 
     provision   Provisions the machine with desired packages and configurations.
+                System: Set the target system (e.g., fedora)
                 Options:
                     -g <group>      Filters by group (e.g., workstation).
                     -c <category>   Filters by category (e.g., desktop).
@@ -21,7 +22,7 @@ Examples:
             Installs the project in editable mode.
     clt update
             Updates the project to the latest version.
-    clt provision -g workstation -c desktop
+    clt provision fedora -g workstation -c desktop
             Provisions the machine with desired packages and configurations,
     clt help
             Prints this help message.

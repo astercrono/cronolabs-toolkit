@@ -72,6 +72,7 @@ function install_packages() {
 
 		if [[ "$GROUP" == "workstation" ]]; then
 			sudo dnf copr -y enable wezfurlong/wezterm-nightly
+			sudo dnf copr enable elxreno/jetbrains-mono-fonts -y
 			sudo dnf update -y
 		fi
 
