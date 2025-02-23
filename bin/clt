@@ -26,13 +26,13 @@ shift
 
 case $subcommand_arg in
 install)
-	./clt-install $@
+	bash lib/clt-install $@
 	;;
 provision)
-	./clt-provision $@
+	bash lib/clt-provision $@
 	;;
 update)
-	./clt-update $@
+	bash lib/clt-update $@
 	;;
 help)
 	cat help.txt
