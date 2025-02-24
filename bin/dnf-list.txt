@@ -22,4 +22,5 @@ workstation:all:vlc
 workstation:all:wezterm
 workstation:all:xmms2
 workstation:all:yt-dlp
+workstation:all:ghostty
 workstation:desktop:steam

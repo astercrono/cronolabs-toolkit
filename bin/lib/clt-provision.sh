@@ -72,8 +72,8 @@ function install_packages() {
 
 		if [[ "$GROUP" == "workstation" ]]; then
 			sudo dnf copr -y enable wezfurlong/wezterm-nightly
-			sudo dnf copr enable elxreno/jetbrains-mono-fonts -y
-			sudo dnf update -y
+			sudo dnf copr -y enable elxreno/jetbrains-mono-fonts -y
+			sudo dnf copr -y enable pgdev/ghostty
 		fi
 
 		install_from_file_batch "dnf-list.txt" "sudo dnf install -y"
@@ -122,9 +122,29 @@ function config_wezterm() {
 	ln -s $CLT_BASE/resource/wezterm/.wezterm.lua $wez_config
 }
 
+function link_config_dir() {
+	config_name="$1"
+	config_dir="$2"
+	resource_link="$3"
+	parent_dir="$(dirname $config_dir)"
+
+	echo "installing $config_name config"
+
+	mkdir -p $parent_dir
+
+	if [ -L "$config_dir" ]; then
+		rm "$config_dir"
+	elif [ -d "$config_dir" ]; then
+		mv $config_dir "$config_dir-backup"
+	fi
+
+	ln -s $CLT_BASE/resource/$resource_link $config_dir
+}
+
 install_packages
 
 if [[ "$GROUP" == "workstation" ]]; then
 	config_nvim
 	config_wezterm
+	link_config_dir "Ghostty" "$HOME/.config/ghostty" "ghostty"
 fi
