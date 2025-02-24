@@ -6,7 +6,7 @@ cd ..
 export CLT_BASE="$(pwd)"
 cd $CLT_BIN
 
-subcommands=("help" "install" "provision" "update")
+subcommands=("help" "install" "provision" "update" "edit")
 
 subcommand_arg="$1"
 valid_subcommand=false
@@ -33,6 +33,11 @@ provision)
 	;;
 update)
 	bash lib/clt-update.sh $@
+	;;
+edit)
+	cd ..
+	source .venv/bin/activate
+	nvim .
 	;;
 help)
 	cat help.txt
