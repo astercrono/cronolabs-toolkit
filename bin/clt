@@ -5,6 +5,8 @@ cd $CLT_BIN
 cd ..
 export CLT_BASE="$(pwd)"
 cd $CLT_BIN
+export CLT_RESOURCE="$CLT_BASE/resource"
+export CLT_TEMPLATE="$CLT_RESOURCE/template"
 
 subcommands=("help" "install" "provision" "update" "edit" "llama" "net")
 

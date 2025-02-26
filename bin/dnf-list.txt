@@ -10,6 +10,9 @@ all:all:tmux
 all:all:tree
 all:all:vim
 all:all:wget2
+all:all:openssl
+all:all:less
+all:all:python
 workstation:all:fastfetch
 workstation:all:fd-find
 workstation:all:ffmpeg
@@ -24,3 +27,4 @@ workstation:all:xmms2
 workstation:all:yt-dlp
 workstation:all:ghostty
 workstation:desktop:steam
+server:all:openssh-server

@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
 
-subcommands=("fedora")
+system_types=("fedora")
+templates=("proxy" "db" "wiki" "mc" "smg" "smuk")
 
-SUBCOMMAND="$1"
+SYSTEM_TYPE="$1"
 GROUP="all"
 CATEGORY="all"
+TEMPLATE=""
 
 shift
 
-if [[ ! " ${subcommands[@]} " =~ " $SUBCOMMAND" ]] || [ -z "$SUBCOMMAND" ]; then
-	echo "Invalid system type: $SUBCOMMAND"
+if [[ ! " ${system_types[@]} " =~ " $SYSTEM_TYPE" ]] || [ -z "$SYSTEM_TYPE" ]; then
+	echo "Invalid System Type: $SYSTEM_TYPE"
 	exit 1
 fi
 
-while getopts "g:c:" opt; do
+while getopts "g:c:t:" opt; do
 	case "${opt}" in
 	g) GROUP="${OPTARG}" ;;
 	c) CATEGORY="${OPTARG}" ;;
+	t) TEMPLATE="${OPTARG}" ;;
 	esac
 done
 shift $((OPTIND - 1))
@@ -66,7 +69,7 @@ function install_from_file_batch() {
 }
 
 function install_packages() {
-	case $SUBCOMMAND in
+	case $SYSTEM_TYPE in
 	fedora)
 		sudo dnf update -y
 
@@ -141,10 +144,27 @@ function link_config_dir() {
 	ln -s $CLT_BASE/resource/$resource_link $config_dir
 }
 
-install_packages
+# install_packages
+#
+# if [[ "$GROUP" == "workstation" ]]; then
+# 	config_nvim
+# 	config_wezterm
+# 	link_config_dir "Ghostty" "$HOME/.config/ghostty" "ghostty"
+# fi
 
-if [[ "$GROUP" == "workstation" ]]; then
-	config_nvim
-	config_wezterm
-	link_config_dir "Ghostty" "$HOME/.config/ghostty" "ghostty"
+if [ -n "$TEMPLATE" ]; then
+	if [[ ! " ${templates[@]} " =~ " $TEMPLATE" ]]; then
+		echo "Invalid template: $TEMPLATE"
+		exit 1
+	fi
+
+	template_script="$CLT_BASE/resource/template/$SYSTEM_TYPE-$GROUP-$CATEGORY-$TEMPLATE.sh"
+
+	echo "Searching for template: $template_script"
+	if [ ! -f "$template_script" ]; then
+		echo "Cannot find template"
+		exit 1
+	fi
+
+	echo "Executing template"
 fi
