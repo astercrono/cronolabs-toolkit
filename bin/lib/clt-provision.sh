@@ -167,4 +167,5 @@ if [ -n "$TEMPLATE" ]; then
 	fi
 
 	echo "Executing template"
+	bash "$template_script" $@
 fi
