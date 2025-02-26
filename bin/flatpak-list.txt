@@ -16,3 +16,4 @@ workstation:all:org.libretro.RetroArch
 workstation:all:org.jitsi.jitsi-meet
 workstation:all:org.signal.Signal
 workstation:all:com.protonvpn.www
+workstation:all:io.dbeaver.DBeaverCommunity
