@@ -144,13 +144,13 @@ function link_config_dir() {
 	ln -s $CLT_BASE/resource/$resource_link $config_dir
 }
 
-# install_packages
-#
-# if [[ "$GROUP" == "workstation" ]]; then
-# 	config_nvim
-# 	config_wezterm
-# 	link_config_dir "Ghostty" "$HOME/.config/ghostty" "ghostty"
-# fi
+install_packages
+
+if [[ "$GROUP" == "workstation" ]]; then
+	config_nvim
+	config_wezterm
+	link_config_dir "Ghostty" "$HOME/.config/ghostty" "ghostty"
+fi
 
 if [ -n "$TEMPLATE" ]; then
 	if [[ ! " ${templates[@]} " =~ " $TEMPLATE" ]]; then
