@@ -1,0 +1,4 @@
+- ssh configs
+- ollama tools
+- more net tools
+- server setups
