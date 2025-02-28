@@ -19,9 +19,9 @@ cp "$CTL_TEMPLATE/config/index.html" /var/www/cronolabs.net/html
 cp "$CTL_TEMPLATE/config/ssl-params.conf" /etc/nginx/snippets
 cp "$CTL_TEMPLATE/config/self-signed.conf" /etc/nginx/snippets
 cp "$CTL_TEMPLATE/config/backend-mapping.conf" /etc/nginx/snippets
-cp "$CTL_TEMPLATE/config/dcronolabs.net.conf" /etc/nginx/conf.d
+cp "$CTL_TEMPLATE/config/cronolabs.net.conf" /etc/nginx/conf.d
 
 chown -R nginx:nginx /var/www
 chmod -R 0755 /var/www
 
-systemctl reload nginx
+systemctl restart nginx

@@ -152,6 +152,10 @@ if [[ "$GROUP" == "workstation" ]]; then
 	link_config_dir "Ghostty" "$HOME/.config/ghostty" "ghostty"
 fi
 
+if [[ "$GROUP" == "server" ]]; then
+	systemctl enable sshd && systemctl start sshd
+fi
+
 if [ -n "$TEMPLATE" ]; then
 	if [[ ! " ${templates[@]} " =~ " $TEMPLATE" ]]; then
 		echo "Invalid template: $TEMPLATE"
