@@ -9,11 +9,13 @@ workstation:all:com.usebruno.Bruno
 workstation:all:dog.unix.cantata.Cantata
 workstation:all:flathub com.transmissionbt.Transmission
 workstation:all:flathub org.gimp.GIMP
+workstation:all:flathub io.gitlab.theevilskeleton.Upscaler
+workstation:all:flathub org.gnome.gitlab.YaLTeR.VideoTrimmer
 workstation:all:im.riot.Riot
-workstation:all:md.obsidian.Obsidian
 workstation:all:org.jitsi.jitsi-meet
 workstation:all:org.libretro.RetroArch
 workstation:all:org.jitsi.jitsi-meet
 workstation:all:org.signal.Signal
 workstation:all:com.protonvpn.www
 workstation:all:io.dbeaver.DBeaverCommunity
+workstation:desktop:flathub com.obsproject.Studio

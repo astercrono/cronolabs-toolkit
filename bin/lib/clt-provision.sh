@@ -75,8 +75,9 @@ function install_packages() {
 
 		if [[ "$GROUP" == "workstation" ]]; then
 			sudo dnf copr -y enable wezfurlong/wezterm-nightly
-			sudo dnf copr -y enable elxreno/jetbrains-mono-fonts -y
+			sudo dnf copr -y enable elxreno/jetbrains-mono-fonts
 			sudo dnf copr -y enable pgdev/ghostty
+			sudo dnf copr -y enable bgstack15/AfterMozilla
 		fi
 
 		install_from_file_batch "dnf-list.txt" "sudo dnf install -y"
