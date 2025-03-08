@@ -10,7 +10,6 @@ function spinner() {
 
 	echo -ne "$content\r"
 
-	period_count=1
 	while true; do
 		if ! kill -0 $pid 2>/dev/null; then
 			wait $pid
@@ -19,25 +18,17 @@ function spinner() {
 		fi
 
 		content="$content"
-		periods=""
+		content="$content."
 
-		i=0
-		while [ $i -lt $period_count ]; do
-			periods="$periods."
-			i=$((i + 1))
-		done
-
-		content="$content$periods"
 		echo -ne "$content\r"
-
 		sleep 1
 	done
 
 	if [ $is_test = 1 ]; then
-		[ $exit_code = 0 ] && echo "$content"PASS
-		[ $exit_code -ne 0 ] && echo "$content"FAIL
+		[ $exit_code = 0 ] && echo "$content "PASS
+		[ $exit_code -ne 0 ] && echo "$content "FAIL
 	else
-		echo "$content"DONE
+		echo "$content "DONE
 	fi
 
 	return $exit_code

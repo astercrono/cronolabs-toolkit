@@ -10,11 +10,6 @@ sudo -v
 
 [ $CLT_DRYRUN = 1 ] && echo "** DRYRUN MODE ENABLED **"
 
-function catch_sigint() {
-	echo "SIGINT: Exiting gracefully"
-	exit 1
-}
-
 function print_h2() {
 	echo "> $@"
 }
@@ -131,6 +126,12 @@ function test_pings() {
 		fi
 	done
 	return $status
+}
+
+function catch_sigint() {
+	echo "SIGINT: Exiting gracefully"
+	cleanup_containers
+	exit 1
 }
 
 trap catch_sigint SIGINT
