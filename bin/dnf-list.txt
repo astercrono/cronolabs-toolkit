@@ -27,5 +27,8 @@ workstation:all:vlc
 workstation:all:wezterm
 workstation:all:xmms2
 workstation:all:yt-dlp
+workstation:all:lxc
+workstation:all:lxc-templates
+workstation:all:dnsmasq
 workstation:desktop:steam
 server:all:openssh-server
