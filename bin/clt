@@ -7,8 +7,15 @@ export CLT_BASE="$(pwd)"
 cd $CLT_BIN
 export CLT_RESOURCE="$CLT_BASE/resource"
 export CLT_TEMPLATE="$CLT_RESOURCE/template"
+[ -z "$CLT_DRYRUN" ] && export CLT_DRYRUN=0
 
-subcommands=("help" "install" "provision" "update" "edit" "llama" "net")
+source "$CLT_BIN/lib/debug.sh"
+export -f breakpoint
+
+source "$CLT_BIN/lib/spinner.sh"
+export -f spinner
+
+subcommands=("help" "install" "provision" "update" "edit" "llama" "net" "testbed")
 
 subcommand_arg="$1"
 valid_subcommand=false
@@ -46,6 +53,9 @@ llama)
 	;;
 net)
 	bash lib/clt-net.sh $@
+	;;
+testbed)
+	bash lib/clt-testbed.sh $@
 	;;
 help)
 	cat help.txt
