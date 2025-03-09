@@ -17,8 +17,7 @@ function spinner() {
 			break
 		fi
 
-		content="$content"
-		content="$content."
+		content="$content ."
 
 		echo -ne "$content\r"
 		sleep 1

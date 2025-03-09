@@ -119,13 +119,21 @@ function test_pings() {
 		values=($(read_lxc_definition $container))
 		name="${values[0]}"
 
-		ping -c 10 "$name" >/dev/null &
+		ping -c 5 "$name" >/dev/null &
 		spinner $! "    Checking $name" 1
 		if [ $? -ne 0 ]; then
 			status=1
 		fi
 	done
 	return $status
+}
+
+function prepare_containers() {
+	echo "dnf update, install sshd, add ssh-key to container"
+}
+
+function provision_containers() {
+	echo "Run provisioning against container"
 }
 
 function catch_sigint() {
@@ -150,3 +158,8 @@ cleanup_containers
 #     - confirm that each container can be pinged.
 #     - run a provision command on each container
 #     - Run some test commands / scripts to confirm all services are working correctly
+#
+#     Try out ssh user@remote_host 'bash -s' < local_script.sh
+#     or cat script.sh | ssh me@myserver /bin/bash
+#     or ssh user@remote_server "$(< localfile)" (allows interactive commands - ex: sudo)
+#     provisioning would be neat if it supported a "run against remote" option
