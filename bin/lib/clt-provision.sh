@@ -3,10 +3,10 @@
 system_types=("fedora")
 templates=("proxy" "db" "wiki" "mc" "smg" "smuk")
 
-SYSTEM_TYPE="$1"
-GROUP="all"
-CATEGORY="all"
-TEMPLATE=""
+SYSTEM_TYPE="${SYSTEM_TYPE:-$1}"
+GROUP="${GROUP:-all}"
+CATEGORY="${CATEGORY:-all}"
+TEMPLATE="${TEMPLATE:-}"
 
 shift
 
@@ -15,7 +15,7 @@ if [[ ! " ${system_types[@]} " =~ " $SYSTEM_TYPE" ]] || [ -z "$SYSTEM_TYPE" ]; t
 	exit 1
 fi
 
-while getopts "g:c:t:" opt; do
+while getopts "g:c:t:r:" opt; do
 	case "${opt}" in
 	g) GROUP="${OPTARG}" ;;
 	c) CATEGORY="${OPTARG}" ;;

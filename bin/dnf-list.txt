@@ -13,6 +13,10 @@ all:all:wget2
 all:all:openssl
 all:all:less
 all:all:python
+all:all:rsync
+all:all:pipx
+all:all:unzip
+all:all:p7zip
 workstation:all:fastfetch
 workstation:all:fd-find
 workstation:all:ffmpeg
@@ -32,3 +36,4 @@ workstation:all:lxc-templates
 workstation:all:dnsmasq
 workstation:desktop:steam
 server:all:openssh-server
+server:lxc:python3-pip

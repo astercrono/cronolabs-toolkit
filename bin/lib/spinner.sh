@@ -8,7 +8,7 @@ function spinner() {
 
 	[ -z "$is_test" ] && is_test=0
 
-	echo -ne "$content\r"
+	echo -ne "$content \r"
 
 	while true; do
 		if ! kill -0 $pid 2>/dev/null; then
@@ -17,7 +17,7 @@ function spinner() {
 			break
 		fi
 
-		content="$content ."
+		content="$content."
 
 		echo -ne "$content\r"
 		sleep 1

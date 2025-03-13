@@ -10,7 +10,7 @@ server {
         root /var/www/cronolabs.net/html;
         index index.html index.htm;
         
-	server_name {{CLUSTER_HOSTNAME}};
+	server_name cronolabs.net;
 
 	location / {
 		proxy_pass $backend$request_uri;
@@ -25,7 +25,7 @@ server {
 	listen 80;
 	listen [::]:80;
 
-	server_name {{CLUSTER_HOSTNAME}};
+	server_name cronolabs.net;
 
 	return 302 https://$host$request_uri;
 }

@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 
-DB_DATABASE="bookstack"
-DB_USERNAME="book"
-DB_PASSWORD=""
-DB_HOST="db.lambda.int.cronolabs.net"
-
 function install_packages() {
-	dnf install nginx php php-common php-fpm php-mysqlnd php-gd php-zip
+	dnf install -y nginx php php-common php-fpm php-mysqlnd php-gd php-zip
 }
 
 function install_composer() {
@@ -21,26 +16,14 @@ function install_configs() {
 	cp $CLT_RESOURCE/bookstack/php-fpm.conf /etc/nginx/conf.d
 	cp $CLT_RESOURCE/bookstack/.env /usr/share/nginx/html
 
-	echo "Database: "
-	read DB_DATABASE
+	[ -z "$DB_DATABASE" ] && echo "Missing environment variable DB_DATABASE" && exit 1
+	[ -z "$DB_USERNAME" ] && echo "Missing environment variable DB_USERNAME" && exit 1
+	[ -z "$DB_PASSWORD" ] && echo "Missing environment variable DB_PASSWORD" && exit 1
+	[ -z "$DB_HOST" ] && echo "Missing environment variable DB_HOST" && exit 1
 
-	echo "Username: "
-	read DB_USERNAME
-
-	echo "Password: "
-	read DB_PASSWORD
-
-	echo "Host: "
-	read DB_HOST
-
-	[ -z "$DB_DATABASE" ] && echo "Missing database" && exit 1
-	[ -z "$DB_USERNAME" ] && echo "Missing user" && exit 1
-	[ -z "$DB_PASSWORD" ] && echo "Missing password" && exit 1
-	[ -z "$DB_HOST" ] && echo "Missing host" && exit 1
-
-	sed -i "s/{DATABASE}/$DB_DATABASE/g" /usr/share/nginx/html/.env
-	sed -i "s/{USERNAME}/$DB_USERNAME/g" /usr/share/nginx/html/.env
-	sed -i "s/{PASSWORD}/$DB_PASSWORD/g" /usr/share/nginx/html/.env
+	sed -i "s/{DATABASE}/$DB_WIKI_DATABASE/g" /usr/share/nginx/html/.env
+	sed -i "s/{USERNAME}/$DB_WIKI_USERNAME/g" /usr/share/nginx/html/.env
+	sed -i "s/{PASSWORD}/$DB_WIKI_PASSWORD/g" /usr/share/nginx/html/.env
 	sed -i "s/{HOST}/$DB_HOST/g" /usr/share/nginx/html/.env
 }
 

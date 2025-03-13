@@ -1,14 +1,24 @@
 #!/usr/bin/env bash
 
-LXC_NAME_PROXY="proxy.test:fedora:41:amd64"
-LXC_NAME_DB="db.test:fedora:41:amd64"
-LXC_NAME_WIKI="wiki.test:fedora:41:amd64"
+CLUSTER_HOSTNAME="${CLUSTER_HOSTNAME:-test.cronolabs.net}"
+
+LXC_NAME_PROXY="proxy.test:fedora:41:amd64:proxy"
+LXC_NAME_DB="db.test:fedora:41:amd64:db"
+LXC_NAME_WIKI="wiki.test:fedora:41:amd64:wiki"
 
 CONTAINERS=($LXC_NAME_PROXY $LXC_NAME_DB $LXC_NAME_WIKI)
 
 sudo -v
 
 [ $CLT_DRYRUN = 1 ] && echo "** DRYRUN MODE ENABLED **"
+
+TEST_STATUS=0
+TEST_FAIL_REASONS=()
+
+function add_failure() {
+	TEST_STATUS=1
+	TEST_FAIL_REASONS+=("Failure: $@")
+}
 
 function print_h2() {
 	echo "> $@"
@@ -73,6 +83,7 @@ function create_containers() {
 
 		run_lxc start --name "$name" >/dev/null &
 		spinner $! "    [Starting] $name"
+		sleep 3
 	done
 }
 
@@ -92,21 +103,22 @@ function add_hosts() {
 			ip_address=$(lxc_ip $name)
 
 			if ! sudo grep -q "$name" /etc/hosts; then
-				[ $CLT_DRYRUN = 0 ] && echo "$ip_address $name" | sudo tee -a /etc/hosts >/dev/null
+				[ $CLT_DRYRUN = 0 ] && echo "$ip_address $(fqdn $name)" | sudo tee -a /etc/hosts >/dev/null
 			fi
 		fi
 	done
 }
 
-function remove_hosts() {
-	print_h2 "Updating /etc/hosts"
+function remove_from_file() {
+	file="$1"
+	print_h2 "Updating $file"
 	for container in "${CONTAINERS[@]}"; do
 		print_submessage "Removing $name"
 
 		if [ ! $CLT_DRYRUN = 1 ]; then
 			values=($(read_lxc_definition $container))
 			name="${values[0]}"
-			[ $CLT_DRYRUN = 0 ] && sudo sed -i "/$name/d" /etc/hosts
+			[ $CLT_DRYRUN = 0 ] && sudo sed -i "/$name/d" "$file"
 		fi
 
 	done
@@ -114,52 +126,117 @@ function remove_hosts() {
 
 function test_pings() {
 	print_h2 "Performing ping tests"
-	status=0
 	for container in "${CONTAINERS[@]}"; do
 		values=($(read_lxc_definition $container))
 		name="${values[0]}"
 
-		ping -c 5 "$name" >/dev/null &
-		spinner $! "    Checking $name" 1
-		if [ $? -ne 0 ]; then
-			status=1
+		ping -c 5 "$(fqdn $name)" >/dev/null &
+		spinner $! "    Checking $(fqdn $name)" 1
+
+		[ $? -ne 0 ] && add_failure "Ping check for $(fqdn $name)"
+	done
+}
+
+function ssh_cmd() {
+	container_name="$1"
+	shift
+	ssh -o StrictHostKeyChecking=no root@$(fqdn $container_name) \
+		"PROXY_SSL_DHPARAM_FAST=1 SYSTEM_TYPE=fedora GROUP=server CATEGORY=lxc $@"
+}
+
+function ssh_key() {
+	keys=("$HOME/.ssh/id_ed25519.pub" "$HOME/.ssh/id_rsa.pub")
+
+	for key in "${keys[@]}"; do
+		if [ -f "$key" ]; then
+			cat "$key"
+			return 0
 		fi
 	done
-	return $status
+
+	return 1
+}
+
+function ssh_script() {
+	container_name="$1"
+	script_name="$2"
+	ssh -o StrictHostKeyChecking=no root@$(fqdn $container_name) \
+		"PROXY_SSL_DHPARAM_FAST=1 SYSTEM_TYPE=fedora GROUP=server CATEGORY=lxc bash -s" <"$script_name"
+}
+
+function prepare_container() {
+	name="$1"
+
+	sudo lxc-attach -n "$name" -- sudo dnf update -y
+	sudo lxc-attach -n "$name" -- sudo dnf install -y openssh-server python rsync
+	sudo lxc-attach -n "$name" -- sudo systemctl start sshd
+	sudo lxc-attach -n "$name" -- sudo mkdir -p /root/.ssh
+	sudo lxc-attach -n "$name" -- bash -c "echo $(ssh_key) >> /root/.ssh/authorized_keys"
+	sudo lxc-attach -n "$name" -- chmod 600 /root/.ssh/authorized_keys
+	sudo lxc-attach -n "$name" -- chmod 700 /root/.ssh
+
+	rsync -av -e "ssh -o StrictHostKeyChecking=no" --exclude=".git" $CLT_BASE root@$(fqdn $name):/root
+	sudo lxc-attach -n "$name" -- /root/cronolabs-toolkit/bin/clt install
 }
 
 function prepare_containers() {
-	echo "dnf update, install sshd, add ssh-key to container"
+	print_h2 "Preparing containers for provisioning"
+
+	for container in "${CONTAINERS[@]}"; do
+		values=($(read_lxc_definition $container))
+		name="${values[0]}"
+
+		prepare_container "$name" >/dev/null 2>&1 &
+		spinner $! "    Preparing $name"
+	done
 }
 
 function provision_containers() {
 	echo "Run provisioning against container"
+	for container in "${CONTAINERS[@]}"; do
+		values=($(read_lxc_definition $container))
+		name="${values[0]}"
+		template="${values[4]}"
+		ssh_cmd $name "clt provision fedora -g server -c lxc -t $template"
+	done
 }
 
 function catch_sigint() {
 	echo "SIGINT: Exiting gracefully"
 	cleanup_containers
+	remove_from_file "/etc/hosts"
+	remove_from_file "$HOME/.ssh/known_hosts"
 	exit 1
 }
 
 trap catch_sigint SIGINT
 
 cleanup_containers
+remove_from_file "/etc/hosts"
+remove_from_file "$HOME/.ssh/known_hosts"
+
 create_containers
 add_hosts
+prepare_containers
+provision_containers
 test_pings
-echo "Todo: Run provisioning scripts here..."
+
 echo "Todo: start testing containers here..."
-remove_hosts
+breakpoint
+
 cleanup_containers
+remove_from_file "/etc/hosts"
+remove_from_file "$HOME/.ssh/known_hosts"
+
+# TODO: Print failures out
+
+if [ ${#TEST_FAIL_REASONS[@]} -gt 0 ]; then
+	echo ""
+	echo "Failure Reasons:"
+	for reason in "${TEST_FAIL_REASONS[@]}"; do
+		echo "    $reason"
+	done
+fi
 
 # TODO:
-#     - Need to modify /etc/hosts with the lxc hostnames and IPs
-#     - confirm that each container can be pinged.
-#     - run a provision command on each container
 #     - Run some test commands / scripts to confirm all services are working correctly
-#
-#     Try out ssh user@remote_host 'bash -s' < local_script.sh
-#     or cat script.sh | ssh me@myserver /bin/bash
-#     or ssh user@remote_server "$(< localfile)" (allows interactive commands - ex: sudo)
-#     provisioning would be neat if it supported a "run against remote" option

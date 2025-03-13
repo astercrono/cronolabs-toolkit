@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-DB_HOST="db.lambda.int.cronolabs.net"
-
 function setup_postgres() {
 	PG_DATA="/var/lib/pgsql/data"
 
-	dnf install postgresql-server postgresql-contrib
+	dnf install -y postgresql-server postgresql-contrib
 
 	systemctl enable postgresql
 
@@ -15,9 +13,8 @@ function setup_postgres() {
 
 	cd /var/lib/pgsql/data
 
-	echo "Enter hostname:"
-	read DB_HOST
-	[ -z "$DB_HOST" ] && echo "Missing hostname" && exit 1
+	[ -z "$DB_HOST" ] && echo "Missing environment variable DB_HOST" && exit 1
+
 	openssl req -new -x509 -days 365 -nodes -text -out server.crt -keyout server.key -subj "/CN=$DB_HOST"
 
 	cp $CLT_TEMPLATE/config/pg_hba.conf "$PG_DATA/pg_hba.conf"
@@ -30,31 +27,30 @@ function setup_postgres() {
 }
 
 function setup_mariadb() {
-	dnf install mariadb-server
+	dnf install -y mariadb-server
 	systemctl enable mariadb
 	systemctl start mariadb
-
-	mysql_secure_installation
+	echo -e "\n\n$DB_ADMIN_PASSWORD\n$DB_ADMIN_PASSWORD\ny\ny\ny\ny" | mysql_secure_installation
 }
 
 function setup_admin_user() {
-	echo "Enter admin username: "
-	read admin_username
+	export PGPASSWORD="$DB_ADMIN_PASSWORD"
+	su - postgres -c "psql -U postgres -c 'create role $DB_ADMIN_USERNAME with login password '$DB_ADMIN_PASSWORD''"
+	su - postgres -c "psql -U postgres -c 'alter role $DB_ADMIN_USERNAME with superuser'"
 
-	echo "Enter admin password: "
-	read admin_password
+	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "create user '$DB_ADMIN_USERNAME'@'%' identified by '$DB_ADMIN_PASSWORD''"
+	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "grant all privileges on *.* to '$DB_ADMIN_USERNAME'@'%'"
+	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "flush privileges"
+}
 
-	[ -z "$admin_username" ] && echo "Missing admin username" && exit 1
-	[ -z "$admin_password" ] && echo "Missing admin password" && exit 1
-
-	su - postgres -c "psql -U postgres -c 'create role $admin_username with login password '$admin_password'"
-	su - postgres -c "psql -U postgres -c 'alter role $admin_user with superuser"
-
-	mysql -u root -p -e "create user '$admin_username'@'%' identified by '$admin_password'"
-	mysql -u root -p -e "grant all privileges on *.* to '$admin_username'@'%'"
-	mysql -u root -p -e "flush privileges"
+function setup_wiki_user() {
+	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "create user '$DB_WIKI_USERNAME'@'%' identified by '$DB_WIKI_PASSWORD'"
+	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "create database $DB_WIKI_DATABASE"
+	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "grant all privileges on $DB_WIKI_DATABASE.* to '$DB_WIKI_USERNAME'@'%'"
+	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "flush privileges"
 }
 
 setup_postgres
 setup_mariadb
 setup_admin_user
+setup_wiki_user
