@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# TODO: check for existing bookstack and if it exists upgrade it instead of installing it
+
 function install_packages() {
 	dnf install -y nginx php php-common php-fpm php-mysqlnd php-gd php-zip
 }
@@ -11,20 +13,21 @@ function install_composer() {
 }
 
 function install_configs() {
-	cp $CLT_RESOURCE/bookstack/nginx.conf /etc/nginx
-	cp $CLT_RESOURCE/bookstack/php.conf /etc/nginx/default.d
-	cp $CLT_RESOURCE/bookstack/php-fpm.conf /etc/nginx/conf.d
-	cp $CLT_RESOURCE/bookstack/.env /usr/share/nginx/html
+	cp $CLT_TEMPLATE/config/bookstack/nginx.conf /etc/nginx
+	cp $CLT_TEMPLATE/config/bookstack/php.conf /etc/nginx/default.d
+	cp $CLT_TEMPLATE/config/bookstack/php-fpm.conf /etc/nginx/conf.d
+	cp $CLT_TEMPLATE/config/bookstack/.env /usr/share/nginx/html
 
-	[ -z "$DB_DATABASE" ] && echo "Missing environment variable DB_DATABASE" && exit 1
-	[ -z "$DB_USERNAME" ] && echo "Missing environment variable DB_USERNAME" && exit 1
-	[ -z "$DB_PASSWORD" ] && echo "Missing environment variable DB_PASSWORD" && exit 1
+	[ -z "$DB_WIKI_DATABASE" ] && echo "Missing environment variable DB_DATABASE" && exit 1
+	[ -z "$DB_WIKI_USERNAME" ] && echo "Missing environment variable DB_USERNAME" && exit 1
+	[ -z "$DB_WIKI_PASSWORD" ] && echo "Missing environment variable DB_PASSWORD" && exit 1
 	[ -z "$DB_HOST" ] && echo "Missing environment variable DB_HOST" && exit 1
 
-	sed -i "s/{DATABASE}/$DB_WIKI_DATABASE/g" /usr/share/nginx/html/.env
-	sed -i "s/{USERNAME}/$DB_WIKI_USERNAME/g" /usr/share/nginx/html/.env
-	sed -i "s/{PASSWORD}/$DB_WIKI_PASSWORD/g" /usr/share/nginx/html/.env
-	sed -i "s/{HOST}/$DB_HOST/g" /usr/share/nginx/html/.env
+	sed -i "s/{{CLUSTER_HOSTNAME}}/$CLUSTER_HOSTNAME/g" /usr/share/nginx/html/.env
+	sed -i "s/{{DATABASE}}/$DB_WIKI_DATABASE/g" /usr/share/nginx/html/.env
+	sed -i "s/{{USERNAME}}/$DB_WIKI_USERNAME/g" /usr/share/nginx/html/.env
+	sed -i "s/{{PASSWORD}/$DB_WIKI_PASSWORD/g" /usr/share/nginx/html/.env
+	sed -i "s/{{HOST}}/$DB_HOST/g" /usr/share/nginx/html/.env
 }
 
 function start_services() {

@@ -17,6 +17,8 @@ all:all:rsync
 all:all:pipx
 all:all:unzip
 all:all:p7zip
+all:all:ruby
+all:all:ruby-devel
 workstation:all:fastfetch
 workstation:all:fd-find
 workstation:all:ffmpeg

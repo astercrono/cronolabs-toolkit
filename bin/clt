@@ -15,6 +15,8 @@ export -f breakpoint
 source "$CLT_BIN/lib/spinner.sh"
 export -f spinner
 
+export CLUSTER_HOSTNAME="${CLUSTER_HOSTNAME:-lambda.int.cronolabs.net}"
+
 export PROXY_SSL_PRIVATE="/etc/ssl/private"
 export PROXY_SSL_CERTS="/etc/ssl/certs"
 export PROXY_SSL_COUNTRY="${SSL_COUNTRY:-US}"
@@ -22,7 +24,7 @@ export PROXY_SSL_STATE="${SSL_STATE:-PA}"
 export PROXY_SSL_LOCATION="${SSL_LOCATION:-Palmerton}"
 export PROXY_SSL_ORG="${SSL_ORG:-CronoLabs}"
 export PROXY_SSL_ORGUNIT="${SSL_ORGUNIT:-'The Bunker'}"
-export PROXY_SSL_CN="${CLT_PROXY_SSL_CN:-proxy.lambda.int.cronolabs.net}"
+export PROXY_SSL_CN="${CLT_PROXY_SSL_CN:-'proxy.$CLUSTER_HOSTNAME'}"
 export PROXY_SSL_DHPARAM_FAST="${PROXY_SSL_DHPARAM_FAST-0}"
 
 export DB_WIKI_DATABASE="${DB_WIKI_DATABASE:-bookstack}"
@@ -30,9 +32,7 @@ export DB_WIKI_USERNAME="${DB_WIKI_USERNAME:-book}"
 export DB_WIKI_PASSWORD="${DB_WIKI_PASSWORD:-password}"
 export DB_ADMIN_USERNAME="${DB_ADMIN_USERNAME:-bigboss}"
 export DB_ADMIN_PASSWORD="${DB_ADMIN_PASSWORD:-password}"
-export DB_HOST="${DB_HOST:-db.lambda.int.cronolabs.net}"
-
-export CLUSTER_HOSTNAME="${CLUSTER_HOSTNAME:-lambda.int.cronolabs.net}"
+export DB_HOST="${DB_HOST:-'db.$CLUSTER_HOSTNAME'}"
 
 subcommands=("help" "install" "provision" "update" "edit" "llama" "net" "testbed")
 
