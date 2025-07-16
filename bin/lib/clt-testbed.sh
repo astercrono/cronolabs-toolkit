@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-CLUSTER_HOSTNAME="${CLUSTER_HOSTNAME:-test.cronolabs.net}"
+CLUSTER_HOSTNAME="clt.cronolabs.net"
 
+# Format: Container name, OS, Version, Arch, Template, Web Proxy Target
 LXC_NAME_PROXY="proxy.test:fedora:41:amd64:proxy"
 LXC_NAME_DB="db.test:fedora:41:amd64:db"
-LXC_NAME_WIKI="wiki.test:fedora:41:amd64:wiki"
+LXC_NAME_WIKI="wiki.test:fedora:41:amd64:wiki:proxy.test"
 
 CONTAINERS=($LXC_NAME_PROXY $LXC_NAME_DB $LXC_NAME_WIKI)
 
@@ -97,13 +98,22 @@ function add_hosts() {
 	for container in "${CONTAINERS[@]}"; do
 		values=($(read_lxc_definition $container))
 		name="${values[0]}"
+		web_proxy_target="${values[5]}"
 
 		print_submessage "Adding $name"
 		if [ ! $CLT_DRYRUN = 1 ]; then
 			ip_address=$(lxc_ip $name)
 
 			if ! sudo grep -q "$name" /etc/hosts; then
-				[ $CLT_DRYRUN = 0 ] && echo "$ip_address $(fqdn $name)" | sudo tee -a /etc/hosts >/dev/null
+				host_line="$ip_address $(fqdn $name)"
+				echo "$host_line" | sudo tee -a /etc/hosts >/dev/null
+				sudo lxc-attach -n "$name" -- bash -c "echo $host_line | sudo tee -a /etc/hosts >/dev/null"
+
+				if [ -n "$web_proxy_target" ]; then
+					proxy_ip=$(lxc_ip $web_proxy_target)
+					echo "$proxy_ip web.$(fqdn $name)" | sudo tee -a /etc/hosts >/dev/null
+				fi
+
 			fi
 		fi
 	done
@@ -140,8 +150,7 @@ function test_pings() {
 function ssh_cmd() {
 	container_name="$1"
 	shift
-	ssh -o StrictHostKeyChecking=no root@$(fqdn $container_name) \
-		"PROXY_SSL_DHPARAM_FAST=1 SYSTEM_TYPE=fedora GROUP=server CATEGORY=lxc $@"
+	ssh -o StrictHostKeyChecking=no root@$(fqdn $container_name) "$@"
 }
 
 function ssh_key() {
@@ -155,13 +164,6 @@ function ssh_key() {
 	done
 
 	return 1
-}
-
-function ssh_script() {
-	container_name="$1"
-	script_name="$2"
-	ssh -o StrictHostKeyChecking=no root@$(fqdn $container_name) \
-		"PROXY_SSL_DHPARAM_FAST=1 SYSTEM_TYPE=fedora GROUP=server CATEGORY=lxc bash -s" <"$script_name"
 }
 
 function prepare_container() {
@@ -197,7 +199,9 @@ function provision_containers() {
 		values=($(read_lxc_definition $container))
 		name="${values[0]}"
 		template="${values[4]}"
-		ssh_cmd $name "clt provision fedora -g server -c lxc -t $template"
+		# ssh_cmd $name "clt provision fedora -g server -c lxc -t $template >/dev/null" >/dev/null &
+		sudo lxc-attach -n "$name" -- bash -c "PROXY_SSL_DHPARAM_FAST=1 CLUSTER_HOSTNAME='$CLUSTER_HOSTNAME' PROXY_SSL_ORGUNIT='Test Lab' SYSTEM_TYPE=fedora GROUP=server CATEGORY=lxc /root/cronolabs-toolkit/bin/clt provision fedora -g server -c lxc -t $template >/dev/null" &
+		spinner $! "Provisioning $name"
 	done
 }
 

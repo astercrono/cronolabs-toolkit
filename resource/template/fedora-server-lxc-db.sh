@@ -17,8 +17,8 @@ function setup_postgres() {
 
 	openssl req -new -x509 -days 365 -nodes -text -out server.crt -keyout server.key -subj "/CN=$DB_HOST"
 
-	cp $CLT_TEMPLATE/config/pg_hba.conf "$PG_DATA/pg_hba.conf"
-	cp $CLT_TEMPLATE/config/postgresql.conf "$PG_DATA/postgresql.conf"
+	cp $CLT_TEMPLATE/config/db/pg_hba.conf "$PG_DATA/pg_hba.conf"
+	cp $CLT_TEMPLATE/config/db/postgresql.conf "$PG_DATA/postgresql.conf"
 
 	chown postgres:postgres /var/lib/pgsql/data/server.{key,crt}
 	chmod 0400 /var/lib/pgsql/data/server.key
@@ -35,10 +35,10 @@ function setup_mariadb() {
 
 function setup_admin_user() {
 	export PGPASSWORD="$DB_ADMIN_PASSWORD"
-	su - postgres -c "psql -U postgres -c 'create role $DB_ADMIN_USERNAME with login password '$DB_ADMIN_PASSWORD''"
+	su - postgres -c "psql -U postgres -c \"create role $DB_ADMIN_USERNAME with login password '$DB_ADMIN_PASSWORD'\""
 	su - postgres -c "psql -U postgres -c 'alter role $DB_ADMIN_USERNAME with superuser'"
 
-	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "create user '$DB_ADMIN_USERNAME'@'%' identified by '$DB_ADMIN_PASSWORD''"
+	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "create user '$DB_ADMIN_USERNAME'@'%' identified by '$DB_ADMIN_PASSWORD'"
 	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "grant all privileges on *.* to '$DB_ADMIN_USERNAME'@'%'"
 	mysql -u root -p"$DB_ADMIN_PASSWORD" -e "flush privileges"
 }

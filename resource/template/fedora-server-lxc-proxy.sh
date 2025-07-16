@@ -25,6 +25,7 @@ cp "$CLT_TEMPLATE/config/proxy/site.conf" /etc/nginx/conf.d/$CLUSTER_HOSTNAME.co
 
 sed -i "s/{{CLUSTER_HOSTNAME}}/$CLUSTER_HOSTNAME/g" /etc/nginx/conf.d/$CLUSTER_HOSTNAME.conf
 sed -i "s/{{CLUSTER_HOSTNAME}}/$CLUSTER_HOSTNAME/g" /etc/nginx/snippets/backend-mapping.conf
+sed -i "s/{{CONTAINER_NAME}}/$CONTAINER_NAME/g" /etc/nginx/snippets/backend-mapping.conf
 
 chown -R nginx:nginx /var/www
 chmod -R 0755 /var/www

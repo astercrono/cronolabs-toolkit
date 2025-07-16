@@ -3,3 +3,9 @@
 - more net tools
 - server setups
 - add a "dry run" flag
+
+- testbed
+  - Set env vars for templates
+	- CLUSTER_HOSTNAME = test.int.cronolabs.net
+	- SSL_ORG = Test Lab
+	- DHPARAM_FAST = 1
