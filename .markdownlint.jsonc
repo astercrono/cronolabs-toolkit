@@ -1,0 +1,10 @@
+{
+	"default": true,
+	"MD003": {
+		"style": "consistent"
+	},
+	"MD005": true,
+	"MD013": {
+		"line_length": 120
+	}
+}

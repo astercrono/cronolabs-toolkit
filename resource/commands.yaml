@@ -1,0 +1,46 @@
+commands:
+  list:
+    description: Show list of available commands
+  location:
+    description: Print installation path
+  install:
+    description: Build and add project to PATH
+  edit:
+    description: Open project up in default editor
+  clean:
+    description: Refresh the virtual environment
+  clear:
+    description: Refresh the virtual-environment
+  clear-data:
+    description: Wipe out the user data directory
+  build:
+    description: Install project to virtual environment and package install
+  rebuild:
+    description: Refresh virtual environment and build
+  upgrade:
+    description: Upgrade dependencies, rebuild lockfile, rebuild project.
+  example:
+    description: Run example python application
+  update:
+    description: Pull down the latest version of the codebase
+  open:
+    description: Change directory to project location with virtual environment activated
+  config:
+    description: Manage APP config
+    usage: "[get KEY | set KEY VALUE | reset | ls | location ]"
+  run:
+    description: Run any command within the virtual environment
+    usage: "program [ARGUMENTS]"
+  temp:
+    description: Manage temp directory
+    usage: "cleanup | location | list | tree "
+  env:
+    description: Print toolkit environment variables
+  coffee:
+    description: Receive free coffee
+  usage:
+    description: Print usage of a command
+    usage: "[command]"
+  net:
+    description: Run network tools
+    usage: "stat"

@@ -1,9 +1,0 @@
-LICENSE
-pyproject.toml
-src/cronolabs_toolkit/__init__.py
-src/cronolabs_toolkit/greeting.py
-src/cronolabs_toolkit.egg-info/PKG-INFO
-src/cronolabs_toolkit.egg-info/SOURCES.txt
-src/cronolabs_toolkit.egg-info/dependency_links.txt
-src/cronolabs_toolkit.egg-info/requires.txt
-src/cronolabs_toolkit.egg-info/top_level.txt

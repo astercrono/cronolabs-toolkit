@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+export CLT_BIN=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
+cd $CLT_BIN
+cd ..
+export CLT_BASE="$(pwd)"
+cd $CLT_BIN
+export CLT_RESOURCE="$CLT_BASE/resource"
+export CLT_TEMPLATE="$CLT_RESOURCE/template"
+[ -z "$CLT_DRYRUN" ] && export CLT_DRYRUN=0
+
+source "$CLT_BIN/lib/debug.sh"
+export -f breakpoint
+
+source "$CLT_BIN/lib/spinner.sh"
+export -f spinner
+
+export CLUSTER_HOSTNAME="${CLUSTER_HOSTNAME:-lambda.int.cronolabs.net}"
+
+export PROXY_SSL_PRIVATE="/etc/ssl/private"
+export PROXY_SSL_CERTS="/etc/ssl/certs"
+export PROXY_SSL_COUNTRY="${SSL_COUNTRY:-US}"
+export PROXY_SSL_STATE="${SSL_STATE:-PA}"
+export PROXY_SSL_LOCATION="${SSL_LOCATION:-Palmerton}"
+export PROXY_SSL_ORG="${SSL_ORG:-CronoLabs}"
+export PROXY_SSL_ORGUNIT="${SSL_ORGUNIT:-'The Bunker'}"
+export PROXY_SSL_CN="${CLT_PROXY_SSL_CN:-'proxy.$CLUSTER_HOSTNAME'}"
+export PROXY_SSL_DHPARAM_FAST="${PROXY_SSL_DHPARAM_FAST-0}"
+
+export DB_WIKI_DATABASE="${DB_WIKI_DATABASE:-bookstack}"
+export DB_WIKI_USERNAME="${DB_WIKI_USERNAME:-book}"
+export DB_WIKI_PASSWORD="${DB_WIKI_PASSWORD:-password}"
+export DB_ADMIN_USERNAME="${DB_ADMIN_USERNAME:-bigboss}"
+export DB_ADMIN_PASSWORD="${DB_ADMIN_PASSWORD:-password}"
+export DB_HOST="${DB_HOST:-'db.$CLUSTER_HOSTNAME'}"
+
+subcommands=("help" "install" "provision" "update" "edit" "llama" "net" "testbed")
+
+subcommand_arg="$1"
+valid_subcommand=false
+for item in "${subcommands[@]}"; do
+	if [[ "$item" == "$subcommand_arg" ]]; then
+		valid_subcommand=true
+		break
+	fi
+done
+
+if [ $valid_subcommand = false ]; then
+	echo "Invalid command $1"
+	exit 1
+fi
+
+shift
+
+function fqdn() {
+	echo "$1.$CLUSTER_HOSTNAME"
+}
+export -f fqdn
+
+case $subcommand_arg in
+install)
+	bash lib/clt-install.sh $@
+	;;
+provision)
+
+	while getopts "r:" opt; do
+		case "${opt}" in
+		r)
+			REMOTE="${OPTARG}"
+			shift
+			shift
+			;;
+		esac
+	done
+
+	if [ -n "$REMOTE" ]; then
+		# TODO: This probably will not work. Will have to set vars manually and not pass args this way
+		ssh $REMOTE "$(<lib/clt-provision.sh $@)"
+	else
+		bash lib/clt-provision.sh $@
+	fi
+	;;
+update)
+	bash lib/clt-update.sh $@
+	;;
+edit)
+	cd ..
+	source .venv/bin/activate
+	nvim .
+	;;
+llama)
+	bash lib/clt-llama.sh $@
+	;;
+net)
+	bash lib/clt-net.sh $@
+	;;
+testbed)
+	bash lib/clt-testbed.sh $@
+	;;
+help)
+	cat help.txt
+	;;
+*)
+	echo "Unknown system type"
+	;;
+esac
