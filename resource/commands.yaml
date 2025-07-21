@@ -44,3 +44,5 @@ commands:
   net:
     description: Run network tools
     usage: "stat"
+  provision:
+    description: Provision machines with pre-configured scripts
