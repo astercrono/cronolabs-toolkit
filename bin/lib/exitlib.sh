@@ -4,6 +4,7 @@ function ecc() {
 	exit_code="$?"
 	error_message="${1:-Error}"
 	[ $exit_code != 0 ] && printf "\n** %s\n" "$error_message" && exit 1
+	return 0
 }
 export -f ecc
 

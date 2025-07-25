@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PATH_EXPORT='export PATH=$PATH'":$APP_BIN"
+export PATH_EXPORT='export PATH=$PATH'":$APP_BIN"
 cd $APP_BASE
 
 function install_path() {
@@ -20,36 +20,103 @@ function install_path() {
 		echo $PATH_EXPORT >>$RC_FILE
 	fi
 }
+export -f install_path
 
-function handle_sigint() {
-	echo "Exiting..."
-	exit 1
+function run_install() {
+	cd "$APP_BASE"
+
+	echo "> Looking for Preinstallable Dependencies"
+	preinstall_deps
+	echo ""
+
+	echo "> Syncing Environment"
+	setup_venv
+	ecc
+	echo ""
+
+	echo "> Building Project"
+	build
+	echo ""
+
+	install_path
+	ecc
+
+	echo ""
+	echo "Installation complete. Reload your shell."
+	echo ""
+
+	cat $APP_RESOURCE/coffee.txt
+
+	echo ""
+	echo "Enjoy"
+	ecc
+	exit 0
 }
-trap handle_sigint SIGINT
+export -f run_install
 
-echo "> Checking Dependencies"
-check_deps
+function validate_target() {
+	[ -z "$1" ] && return 1
+	is_valid=$(yq "has(\"$1\")" "$APPC_PROVISION_CONFIG")
+	if [[ "$is_valid" == "true" ]]; then
+		return 0
+	else
+		return 1
+	fi
+}
+export -f validate_target
+
+function install() {
+	provision="$1"
+	remote="$2"
+	branch="$3"
+
+	echo "provision: $provision, remote: $remote, branch: $branch"
+
+	case "$PROVISION" in
+	true)
+		echo "Provisioning"
+		echo "Installing"
+		;;
+	false)
+		echo "Installing"
+		;;
+	esac
+}
+
+target="$1"
+branch=$(git rev-parse --abbrev-ref HEAD)
+ecc "Unable to determine branch"
+
+[ -z "$target" ] && fail "Missing required argument: <target>"
+
+remote_hostname=$(yq ".$target.hostname" "$APPC_PROVISION_CONFIG")
+
+validate_target "$target"
+ecc "Invalid target. Does $target exist in $APPC_PROVISION_CONFIG?"
+
+shift
+
+provition=false
+while getopts ":p" opt; do
+	case "$opt" in
+	p)
+		provision=true
+		;;
+	esac
+done
+
 echo ""
 
-echo "> Looking for Preinstallable Dependencies"
-preinstall_deps
-echo ""
+case "$remote_hostname" in
+localhost)
+	echo "Installing locally"
+	;;
+*)
+	echo "Installing to $remote_hostname"
+	;;
+esac
 
-echo "> Syncing Environment"
-setup_venv
-echo ""
-
-echo "> Building Project"
-build
-echo ""
-
-install_path
-
-echo ""
-echo "Installation complete. Reload your shell."
-echo ""
-
-cat $APP_RESOURCE/coffee.txt
-
-echo ""
-echo "Enjoy"
+if [[ "$provision" == true ]]; then
+	echo "provision"
+	ecc "Error provisionioning"
+fi

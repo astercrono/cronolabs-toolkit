@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
 
 function build() {
-	pushd . >/dev/null
-	cd "$APP_BASE"
 	uv pip install -e .
 	ecc
 	pre-commit install
 	ecc
-	popd >/dev/null
 }
 export -f build
 

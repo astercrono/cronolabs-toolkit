@@ -2,6 +2,7 @@
 
 function sub_in_config_vars() {
 	qsed_varsub "APP_DATA" "$APP_DATA" "$APP_DATA_CONFIG"
+	qsed_varsub "APP_BASE" "$APP_BASE" "$APP_DATA_CONFIG"
 
 	cores="$(corecount)"
 	if [[ -n "$cores" && "$cores" =~ ^-?[0-9]+$ ]]; then

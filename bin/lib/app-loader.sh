@@ -4,6 +4,8 @@ export APP_OS="$(uname -s)"
 export APP_DATA="$HOME/.local/share/$APP_NAME"
 export APP_DATA_CONFIG="$APP_DATA/config"
 
+export dependencies=("uv" "pre-commit" "yq")
+
 source "$APP_BIN/lib/debug.sh"
 source "$APP_BIN/lib/spinner.sh"
 source "$APP_BIN/lib/exitlib.sh"
@@ -14,20 +16,20 @@ source "$APP_BIN/lib/sed.sh"
 source "$APP_BIN/lib/temp.sh"
 source "$APP_BIN/lib/core.sh"
 
-command_argument="$1"
+command="$1"
 shift
-
-dependencies=("uv" "pre-commit" "yq")
 
 function check_deps() {
 	silent="$1"
 	success=0
 
+	[[ "$silent" != "1" ]] && echo "Checking dependencies:"
+
 	for dep in "${dependencies[@]}"; do
 		if command -v $dep &>/dev/null; then
-			[ -z "$silent" ] && printf "    %-20s %-10s\n" "$dep" "FOUND"
+			[[ "$silent" != "1" ]] && printf "    %-20s %-10s\n" "$dep" "FOUND"
 		else
-			[ -z "$silent" ] && printf "    %-20s %-10s\n" "$dep" "NOT FOUND"
+			[[ "$silent" != "1" ]] && printf "    %-20s %-10s\n" "$dep" "NOT FOUND"
 			success=1
 		fi
 	done
@@ -36,7 +38,14 @@ function check_deps() {
 }
 export -f check_deps
 
-check_deps 1
+function preinstall_deps() {
+	# Mac needs GNU Sed
+	if uname | grep -i -q "darwin" && ! command -v gsed &>/dev/null && command -v brew &>/dev/null; then
+		brew install gnu-sed
+		ecc
+	fi
+}
+export -f preinstall_deps
 
 function print_timestamp() {
 	case "$APP_OS" in
@@ -92,8 +101,11 @@ function list() {
 }
 
 function run_cmd() {
+	[[ "$command" == "install" ]] && check_deps
+	check_deps 1
+
 	cd "$APP_BASE"
-	cmd=$(yq ".commands.$command_argument | key" $APP_COMMANDS_FILE)
+	cmd=$(yq ".commands.$command | key" $APP_COMMANDS_FILE)
 
 	case "$cmd" in
 	usage)
@@ -140,25 +152,16 @@ function indent_output() {
 }
 export -f indent_output
 
-function preinstall_deps() {
-	# Mac needs GNU Sed
-	if uname | grep -i -q "darwin" && ! command -v gsed &>/dev/null && command -v brew &>/dev/null; then
-		brew install gnu-sed
-		ecc
-	fi
-}
-export -f preinstall_deps
-
 function handle_sigint() {
 	echo "Exiting..."
 	exit 1
 }
 trap handle_sigint SIGINT
 
-if [ -z "$command_argument" ]; then
+if [ -z "$command" ]; then
 	echo "Missing command" && list && exit 1
-elif ! yq -e ".commands.$command_argument" $APP_COMMANDS_FILE >/dev/null 2>&1; then
-	echo "Unknown command: $command_argument" && list && exit 1
+elif ! yq -e ".commands.$command" $APP_COMMANDS_FILE >/dev/null 2>&1; then
+	echo "Unknown command: $command" && list && exit 1
 fi
 
 ensure_data_dir

@@ -15,15 +15,33 @@
 # - lab/smg
 # - lab/smuk
 
-target="$1"
+# subcommand="$1"
+# shift
 
-case "$target" in
-"local/cronbook") ;;
-"local/cronbox") ;;
-"lab/mc") ;;
-"lab/proxy") ;;
-"lab/db") ;;
-"lab/wiki") ;;
-"lab/smg") ;;
-"lab/smuk") ;;
-esac
+# clt install --remote=<remote>
+
+# clt provision install <remote>
+# --target: required
+#
+# clt provision orbital --install
+# clt provision orbital --update
+
+# clt install --remote=<name> # defaults to local if remote not given
+#
+# case "$subcommand" in
+# install) ;;
+# *) fail "Invalid provision command: $subcommand" ;;
+# esac
+
+# target="$1"
+#
+# case "$target" in
+# "local/cronbook") ;;
+# "local/cronbox") ;;
+# "lab/mc") ;;
+# "lab/proxy") ;;
+# "lab/db") ;;
+# "lab/wiki") ;;
+# "lab/smg") ;;
+# "lab/smuk") ;;
+# esac
