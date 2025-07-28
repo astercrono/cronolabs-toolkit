@@ -42,11 +42,7 @@ function provision_vars() {
 	echo $vars
 }
 
-function provision_local() {
-	echo "Provision local..."
-}
-
-function provision_remote() {
+function provision() {
 	pushd . &>/dev/null
 	cd "$PRV_TEMPLATES_DIR"
 
@@ -56,12 +52,26 @@ function provision_remote() {
 		echo ""
 		echo "> Running $template_path"
 		echo ""
-		ssh -o StrictHostKeyChecking=accept-new "$PRV_TARGET_USER"@"$PRV_TARGET_HOSTNAME" "$PRV_PROVISION_VARS && bash -s" <"$template_path.sh"
-		[[ "$?" != "0" ]] && echo "Error running template. Aborting." && exit 1
+		echo "[Provisioning $PRV_TARGET @ $PRV_TARGET_HOSTNAME]"
+		echo ""
 
+		case "$PRV_TARGET_HOSTNAME" in
+		localhost)
+			(
+				eval "$PRV_PROVISION_VARS"
+				"$template_path.sh"
+			)
+			;;
+		*)
+			ssh -o StrictHostKeyChecking=accept-new "$PRV_TARGET_USER"@"$PRV_TARGET_HOSTNAME" "$PRV_PROVISION_VARS && bash -s" <"$template_path.sh"
+			;;
+		esac
+
+		[[ "$?" != "0" ]] && echo "Error running template. Aborting." && exit 1
 	done < <(yq ".$PRV_TARGET.templates | .[]" "$PRV_HOST_FILE")
 
 	popd &>/dev/null
+
 }
 
 function handle_exit() {
@@ -119,14 +129,5 @@ load_secrets
 ping_check
 
 export PRV_PROVISION_VARS="$(provision_vars)"
-case "$PRV_TARGET_HOSTNAME" in
-localhost)
-	echo "Installing locally"
-	provision_local
-	;;
-*)
-	echo ""
-	echo "[Provisioning $PRV_TARGET @ $PRV_TARGET_HOSTNAME]"
-	provision_remote
-	;;
-esac
+
+provision
