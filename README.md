@@ -14,6 +14,7 @@ Things provided by CLT:
 
 - [Bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) >= 4
 - [GNU sed](https://www.gnu.org/software/sed/) (Will be automatically installed if missing on macOS)
+- [jq](https://jqlang.org/)
 - [Python](https://www.python.org/) >= 3.12
 - [UV](https://docs.astral.sh/uv/)
 - [pre-commit](https://pre-commit.com/)
@@ -80,6 +81,8 @@ the corresponding Python module will be searched for. It is important the above 
 followed so that the correct file can be located for a command.
 
 ### Adding a new command
+
+**NOTICE: This section is out-of-date**
 
 Let's say we want to add a new command called `foo` that prints out the message `bar`.
 
