@@ -6,7 +6,7 @@ Things provided by CLT:
 
 - A home for tools and scripts written in either Bash or Python.
 - A consistent CLI for accessing included tools and scripts.
-- Baked in support to managing sensitive configs via Mozilla SOPS.
+- Baked in support to managing secrets.
 - Easily installable.
 - Free Coffee
 
