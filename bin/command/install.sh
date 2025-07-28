@@ -54,69 +54,28 @@ function run_install() {
 }
 export -f run_install
 
-function validate_target() {
-	[ -z "$1" ] && return 1
-	is_valid=$(yq "has(\"$1\")" "$APPC_PROVISION_CONFIG")
-	if [[ "$is_valid" == "true" ]]; then
-		return 0
-	else
-		return 1
-	fi
-}
-export -f validate_target
-
-function install() {
+function install_local() {
 	provision="$1"
 	remote="$2"
 	branch="$3"
 
-	echo "provision: $provision, remote: $remote, branch: $branch"
+	if [[ "$provision" == true ]]; then
+		echo "provision"
+		ecc "Error provisionioning"
+	fi
 
-	case "$PROVISION" in
-	true)
-		echo "Provisioning"
-		echo "Installing"
-		;;
-	false)
-		echo "Installing"
-		;;
-	esac
+	echo "provision: $provision, remote: $remote, branch: $branch"
 }
 
-target="$1"
-branch=$(git rev-parse --abbrev-ref HEAD)
-ecc "Unable to determine branch"
+function install_remote() {
+	provision="$1"
+	target="$2"
+	branch="$3"
 
-[ -z "$target" ] && fail "Missing required argument: <target>"
+	if [[ "$provision" == true ]]; then
+		echo "provision"
+		ecc "Error provisionioning"
+	fi
+}
 
-remote_hostname=$(yq ".$target.hostname" "$APPC_PROVISION_CONFIG")
-
-validate_target "$target"
-ecc "Invalid target. Does $target exist in $APPC_PROVISION_CONFIG?"
-
-shift
-
-provition=false
-while getopts ":p" opt; do
-	case "$opt" in
-	p)
-		provision=true
-		;;
-	esac
-done
-
-echo ""
-
-case "$remote_hostname" in
-localhost)
-	echo "Installing locally"
-	;;
-*)
-	echo "Installing to $remote_hostname"
-	;;
-esac
-
-if [[ "$provision" == true ]]; then
-	echo "provision"
-	ecc "Error provisionioning"
-fi
+run_install

@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 
-export PROVISION_TARGET=""
+# provision lib
+
+function provision() {
+	target="$1"
+
+	[ -z "$target" ] && fail "Missing required argument: <target>"
+}

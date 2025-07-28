@@ -46,3 +46,7 @@ commands:
     usage: "stat"
   provision:
     description: Provision machines with pre-configured scripts
+    usage: "-d <provision_directory> <target>"
+  bws:
+    description: Bitwarden Secret Manager
+    usage: "[options] [command]"

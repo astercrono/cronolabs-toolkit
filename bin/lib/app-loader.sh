@@ -4,7 +4,7 @@ export APP_OS="$(uname -s)"
 export APP_DATA="$HOME/.local/share/$APP_NAME"
 export APP_DATA_CONFIG="$APP_DATA/config"
 
-export dependencies=("uv" "pre-commit" "yq")
+export dependencies=("uv" "pre-commit" "yq" "jq")
 
 source "$APP_BIN/lib/debug.sh"
 source "$APP_BIN/lib/spinner.sh"
@@ -15,9 +15,7 @@ source "$APP_BIN/lib/config.sh"
 source "$APP_BIN/lib/sed.sh"
 source "$APP_BIN/lib/temp.sh"
 source "$APP_BIN/lib/core.sh"
-
-command="$1"
-shift
+source "$APP_BIN/lib/bwlib.sh"
 
 function check_deps() {
 	silent="$1"
@@ -87,13 +85,13 @@ function touch_timestamp() {
 export -f touch_timestamp
 
 function command_list {
-	yq -r '.commands | to_entries | .[] | .key' "$APP_COMMANDS_FILE" | sort
+	echo "$APP_COMMANDS" | yq -r '.commands | to_entries | .[] | .key' | sort
 }
 
 function list() {
 	printf "Supported commands: \n"
 	for key in $(command_list); do
-		desc=$(yq ".commands.$key.description" "$APP_COMMANDS_FILE")
+		desc=$(echo "$APP_COMMANDS" | yq ".commands.$key.description")
 		printf "    %-15s %-40s\n" "$key" "$desc"
 	done
 	echo ""
@@ -105,26 +103,26 @@ function run_cmd() {
 	check_deps 1
 
 	cd "$APP_BASE"
-	cmd=$(yq ".commands.$command | key" $APP_COMMANDS_FILE)
+	cmd=$(echo "$APP_COMMANDS" | yq ".commands.$command | key")
 
 	case "$cmd" in
 	usage)
 		usage_cmd="$1"
 		if [[ "$usage_cmd" == "" ]]; then
 			for key in $(command_list); do
-				desc=$(yq ".commands.$key.description" "$APP_COMMANDS_FILE")
+				desc=$(echo "$APP_COMMANDS" | yq ".commands.$key.description")
 				printf "    %-15s %-40s\n" "$key" "$desc"
 
 				usage_msg=$(yq ".commands.$key.usage" "$APP_COMMANDS_FILE")
 				[[ "$usage_msg" != "null" ]] && printf "    %-15s %-40s\n" "" "Usage: $APP_NAME $usage_msg"
 			done
 		else
-			if ! yq -e ".commands.$usage_cmd" $APP_COMMANDS_FILE >/dev/null 2>&1; then
+			if ! echo "$APP_COMMANDS" | yq -e ".commands.$usage_cmd" >/dev/null 2>&1; then
 				echo "Unknown command: $usage_cmd" && echo "Usage: $APP_NAME usage [command]" && echo "" && list && exit 1
 			fi
 
-			desc=$(yq ".commands.$usage_cmd.description" "$APP_COMMANDS_FILE")
-			usage_msg=$(yq ".commands.$usage_cmd.usage" $APP_COMMANDS_FILE)
+			desc=$(echo "$APP_COMMANDS" | yq ".commands.$usage_cmd.description")
+			usage_msg=$(echo "$APP_COMMANDS" | yq ".commands.$usage_cmd.usage")
 
 			[[ "$usage_msg" == "null" ]] && usage_msg=""
 
@@ -135,7 +133,11 @@ function run_cmd() {
 		;;
 	list) list ;;
 	*)
-		if [ -f "bin/command/$cmd.sh" ]; then
+		[[ "$cmd" != "config" ]] && validate_secret_backend
+
+		if [ -f "$APP_USER_COMMAND_SCRIPTS/$cmd.sh" ]; then
+			bash "$APP_USER_COMMAND_SCRIPTS/$cmd.sh" $@
+		elif [ -f "bin/command/$cmd.sh" ]; then
 			bash bin/command/$cmd.sh $@
 		elif module_exists "command.$cmd"; then
 			pyrun "command.$cmd" $@
@@ -152,17 +154,32 @@ function indent_output() {
 }
 export -f indent_output
 
+function load_commands() {
+	if [ ! -f "$APP_USER_COMMANDS" ]; then
+		export APP_COMMANDS=$(<$APP_COMMANDS_FILE)
+	else
+		export APP_COMMANDS=$(yq e ". *+ load(\"$APP_USER_COMMANDS\")" $APP_COMMANDS_FILE)
+	fi
+}
+
+function validate_secret_backend() {
+	if [[ -n "$APPC_SECRET_BACKEND" && "$APPC_SECRET_BACKEND" != "0" ]]; then
+		type -t "$APPC_SECRET_BACKEND"_load_secrets &>/dev/null || fail "Invalid secrets backend: $APPC_SECRET_BACKEND"
+	fi
+}
+export -f validate_secret_backend
+
+function load_secrets() {
+	local secret_loader="${APPC_SECRET_BACKEND}_load_secrets"
+	$secret_loader
+}
+export -f load_secrets
+
 function handle_sigint() {
 	echo "Exiting..."
 	exit 1
 }
 trap handle_sigint SIGINT
-
-if [ -z "$command" ]; then
-	echo "Missing command" && list && exit 1
-elif ! yq -e ".commands.$command" $APP_COMMANDS_FILE >/dev/null 2>&1; then
-	echo "Unknown command: $command" && list && exit 1
-fi
 
 ensure_data_dir
 clean_user_config
@@ -170,5 +187,39 @@ match_config_to_template
 load_user_config
 ensure_temp
 check_data_dir
+
+if [[ "$1" != "config" ]]; then
+	# If USER_DIR is set in config, confirm it is "correct" before using it.
+	if [ -n "$APPC_USER_DIR" ] && [[ "$APPC_USER_DIR" != "0" ]]; then
+		[ ! -d "$APPC_USER_DIR" ] && fail "User directory not set to a valid directory"
+		export APP_USER_DIR="$APPC_USER_DIR"
+	fi
+
+	while getopts ":u:" opt; do
+		case "$opt" in
+		u)
+			export APP_USER_DIR="${OPTARG}"
+			;;
+		*)
+			fail "Unknown argument: $opt"
+			;;
+		esac
+	done
+	shift "$((OPTIND - 1))"
+
+	export APP_USER_COMMANDS="$APP_USER_DIR/commands.yaml"
+	export APP_USER_COMMAND_SCRIPTS="$APP_USER_DIR/commands"
+
+fi
+
+load_commands
+command="$1"
+shift
+
+if [ -z "$command" ]; then
+	echo "Missing command" && list && exit 1
+elif ! echo "$APP_COMMANDS" | yq -e ".commands.$command" >/dev/null 2>&1; then
+	echo "Unknown command: $command" && list && exit 1
+fi
 
 run_cmd $@

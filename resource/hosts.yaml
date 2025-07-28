@@ -1,17 +1,9 @@
-cronbook:
+sample1:
   hostname: localhost
   templates:
-    - fedora/baseline
-    - fedora/workstation
-cronbox:
-  hostname: localhost
+    - foo/baseline
+    - workstation
+sample2:
+  hostname: sample.domain.tld
   templates:
-    - fedora/baseline
-    - fedora/workstation
-komo:
-  hostname: komo.lambda.int.cronolabs.net
-  templates:
-    - debian/baseline
-    - debian/docker
-    - debian/komodo
-
+    - bar/baseline
