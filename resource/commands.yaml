@@ -1,52 +1,45 @@
 commands:
-  list:
-    description: Show list of available commands
-  location:
-    description: Print installation path
-  install:
-    description: Build and add project to PATH
-  edit:
-    description: Open project up in default editor
+  build:
+    description: Install project to virtual environment and package install
+  bws:
+    description: Bitwarden Secret Manager
+    usage: "[options] [command]"
   clean:
     description: Refresh the virtual environment
   clear:
     description: Refresh the virtual-environment
   clear-data:
     description: Wipe out the user data directory
-  build:
-    description: Install project to virtual environment and package install
-  rebuild:
-    description: Refresh virtual environment and build
-  upgrade:
-    description: Upgrade dependencies, rebuild lockfile, rebuild project.
-  example:
-    description: Run example python application
-  update:
-    description: Pull down the latest version of the codebase
-  open:
-    description: Change directory to project location with virtual environment activated
+  coffee:
+    description: Receive free coffee
   config:
     description: Manage APP config
     usage: "[get KEY | set KEY VALUE | reset | ls | location ]"
+  env:
+    description: Print toolkit environment variables
+  example:
+    description: Run example python application
+  install:
+    description: Build and add project to PATH
+  list:
+    description: Show list of available commands
+  location:
+    description: Print installation path
+  provision:
+    description: Provision machines with pre-configured scripts
+    usage: "<target>"
+  rebuild:
+    description: Refresh virtual environment and build
   run:
     description: Run any command within the virtual environment
-    usage: "program [ARGUMENTS]"
+    usage: "<program> [ARGUMENTS]"
   temp:
     description: Manage temp directory
     usage: "cleanup | location | list | tree "
-  env:
-    description: Print toolkit environment variables
-  coffee:
-    description: Receive free coffee
+  update:
+    description: Pull down the latest version of the codebase
+  upgrade:
+    description: Upgrade dependencies, rebuild lockfile, rebuild project.
   usage:
     description: Print usage of a command
     usage: "[command]"
-  net:
-    description: Run network tools
-    usage: "stat"
-  provision:
-    description: Provision machines with pre-configured scripts
-    usage: "-d <provision_directory> <target>"
-  bws:
-    description: Bitwarden Secret Manager
-    usage: "[options] [command]"
