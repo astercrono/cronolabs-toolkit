@@ -42,6 +42,7 @@ dependencies = [
     { name = "httpx" },
     { name = "pre-commit" },
     { name = "pyright" },
+    { name = "pyyaml" },
     { name = "ruff" },
     { name = "tabulate" },
 ]
@@ -51,6 +52,7 @@ requires-dist = [
     { name = "httpx" },
     { name = "pre-commit" },
     { name = "pyright" },
+    { name = "pyyaml" },
     { name = "ruff" },
     { name = "tabulate", specifier = ">=0.9.0" },
 ]

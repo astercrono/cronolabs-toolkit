@@ -27,7 +27,7 @@ commands:
     description: Print installation path
   provision:
     description: Provision machines with pre-configured scripts
-    usage: "<target>"
+    usage: "[list | info] <target>"
   rebuild:
     description: Refresh virtual environment and build
   run:

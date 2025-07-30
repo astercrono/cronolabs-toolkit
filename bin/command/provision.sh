@@ -43,6 +43,11 @@ function provision_vars() {
 }
 
 function provision() {
+	if [[ "$(yq "not (has(\"$PRV_TARGET.templates\")) or .$PRV_TARGET.templates | length == 0")" == "true" ]]; then
+		echo "No templates to process"
+		return 0
+	fi
+
 	pushd . &>/dev/null
 	cd "$PRV_TEMPLATES_DIR"
 
@@ -74,8 +79,45 @@ function provision() {
 
 }
 
+function list_targets() {
+	echo "File: $PRV_HOST_FILE"
+	echo "--------------------------------------------------"
+
+	previous_target=""
+	while IFS= read target; do
+		target_description=$(yq ".$target.description" "$PRV_HOST_FILE")
+		target_hostname=$(yq ".$target.hostname" "$PRV_HOST_FILE")
+		target_type=$(yq ".$target.type" "$PRV_HOST_FILE")
+		target_parent=$(yq ".$target.parent" "$PRV_HOST_FILE")
+
+		[[ "$target_parent" != "null" ]] && continue
+		[ -n "$previous_target" ] && echo "--------------------------------------------------"
+
+		printf "%-6s %s\n" "Name:" "$target"
+		printf "%-6s %s\n" "Desc:" "$target_description"
+		printf "%-6s %s\n" "Host:" "$target_hostname"
+		printf "%-6s %s\n" "Type:" "$target_type"
+
+		while IFS= read sub_target; do
+			echo ""
+
+			sub_target_description=$(yq ".$sub_target.description" "$PRV_HOST_FILE")
+			sub_target_hostname=$(yq ".$sub_target.hostname" "$PRV_HOST_FILE")
+			sub_target_type=$(yq ".$sub_target.type" "$PRV_HOST_FILE")
+			sub_target_parent=$(yq ".$sub_target.parent" "$PRV_HOST_FILE")
+
+			printf "    > %-15s %s\n" "Name:" "$sub_target"
+			printf "      %-15s %s\n" "Description:" "$sub_target_description"
+			printf "      %-15s %s\n" "Hostname:" "$sub_target_hostname"
+			printf "      %-15s %s\n" "Type:" "$sub_target_type"
+		done < <(yq "to_entries[] | select(.value.parent == \"$target\") | .key" "$PRV_HOST_FILE")
+
+		previous_target="$target"
+	done < <(yq "keys | to_entries | .[] | .value" "$PRV_HOST_FILE")
+}
+
 function handle_exit() {
-	echo "Exiting..."
+	[[ "$?" != "0" ]] && echo "Exiting..."
 	exit $?
 }
 trap handle_exit EXIT
@@ -85,6 +127,21 @@ function handle_sigint() {
 	exit 1
 }
 trap handle_sigint SIGINT
+
+[ -z "$PRV_PROVISION_DIR" ] && echo "**Missing required provision dir" && echo "" && clt usage provision && exit 1
+[ ! -d "$PRV_PROVISION_DIR" ] && fail "Invalid provision dir"
+
+case "$1" in
+list)
+	if [[ "$2" == "--table" ]]; then
+		pyrun "command.list_provision_hosts"
+	else
+		list_targets
+	fi
+	exit 0
+	;;
+info) ;;
+esac
 
 while getopts ":h:" opt; do
 	case $opt in
@@ -98,9 +155,6 @@ while getopts ":h:" opt; do
 	esac
 done
 shift "$((OPTIND - 1))"
-
-[ -z "$PRV_PROVISION_DIR" ] && echo "**Missing required provision dir" && echo "" && clt usage provision && exit 1
-[ ! -d "$PRV_PROVISION_DIR" ] && fail "Invalid provision dir"
 
 [ -z "$PRV_HOST_FILE" ] && echo "**Missing required hosts file" && echo "" && clt usage provision && exit 1
 [ ! -f "$PRV_HOST_FILE" ] && fail "Invalid hosts file path"
