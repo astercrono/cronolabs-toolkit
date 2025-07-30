@@ -3,6 +3,7 @@ import os
 import yaml
 from typing import Any
 from tabulate import tabulate
+from icmplib import ping
 
 _Node = dict[str, Any]
 _GroupedNodes = dict[str, list[_Node]]
@@ -38,6 +39,9 @@ def group_by_parent(host_data: _Node) -> _GroupedNodes:
 
         if parent and parent in grouped_data:
             target_data["name"] = target_name
+            target_data["alive"] = ping(
+                target_data["hostname"], count=1, privileged=False
+            ).is_alive
             grouped_data[parent].append(target_data)
 
     return grouped_data
@@ -50,7 +54,7 @@ if __name__ == "__main__":
     if not host_data:
         sys.exit(1)
 
-    table_data: list[tuple[str, str, str, str]] = []
+    table_data: list[tuple[str, str, str, str, str]] = []
     grouped_data: _GroupedNodes = group_by_parent(host_data)
 
     for target_name, target_data in host_data.items():
@@ -58,12 +62,25 @@ if __name__ == "__main__":
             continue
 
         children: list[_Node] = grouped_data[target_name]
+        is_alive = ping(target_data["hostname"], count=1, privileged=False).is_alive
 
         table_data.append(
-            (target_name, "", target_data["description"], target_data["type"])
+            (
+                target_name,
+                "",
+                target_data["description"],
+                target_data["type"],
+                str(is_alive),
+            )
         )
 
         for child in children:
-            table_data.append(("", child["name"], child["description"], child["type"]))
+            table_data.append(
+                ("", child["name"], child["description"], child["type"], child["alive"])
+            )
 
-    print(tabulate(table_data, headers=["Target", "Child", "Description", "Type"]))
+    print(
+        tabulate(
+            table_data, headers=["Target", "Child", "Description", "Type", "Alive"]
+        )
+    )

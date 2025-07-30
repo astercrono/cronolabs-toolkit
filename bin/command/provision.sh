@@ -79,6 +79,14 @@ function provision() {
 
 }
 
+function is_active() {
+	if ping -c 1 -W 2 "$1" &>/dev/null; then
+		echo "Yes"
+	else
+		echo "No"
+	fi
+}
+
 function list_targets() {
 	echo "File: $PRV_HOST_FILE"
 	echo "--------------------------------------------------"
@@ -97,6 +105,7 @@ function list_targets() {
 		printf "%-6s %s\n" "Desc:" "$target_description"
 		printf "%-6s %s\n" "Host:" "$target_hostname"
 		printf "%-6s %s\n" "Type:" "$target_type"
+		printf "%-6s %s\n" "Active:" "$(is_active $target_hostname)"
 
 		while IFS= read sub_target; do
 			echo ""
@@ -110,6 +119,7 @@ function list_targets() {
 			printf "      %-15s %s\n" "Description:" "$sub_target_description"
 			printf "      %-15s %s\n" "Hostname:" "$sub_target_hostname"
 			printf "      %-15s %s\n" "Type:" "$sub_target_type"
+			printf "      %-15s %s\n" "Active:" "$(is_active $sub_target_hostname)"
 		done < <(yq "to_entries[] | select(.value.parent == \"$target\") | .key" "$PRV_HOST_FILE")
 
 		previous_target="$target"
