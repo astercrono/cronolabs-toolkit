@@ -6,7 +6,6 @@ if [[ -z "$APP_USER_DIR" || "$APP_USER_DIR" == "0" ]]; then
 	fail "User directory not set. Either set USER_DIR in config or pass -u <path> to program."
 fi
 
-export PRV_TARGET_HOSTNAME=""
 export PRV_PROVISION_DIR="${APP_USER_DIR}/provision"
 export PRV_HOST_FILE="$PRV_PROVISION_DIR/hosts.yaml"
 export PRV_TEMPLATES_DIR="$PRV_PROVISION_DIR/templates"
@@ -178,19 +177,6 @@ list)
 info) ;;
 esac
 
-while getopts ":h:" opt; do
-	case $opt in
-	h)
-		PRV_TARGET_HOSTNAME="${OPTARG}"
-		;;
-	*)
-		clt usage provision
-		fail "Unknown argument: $opt"
-		;;
-	esac
-done
-shift "$((OPTIND - 1))"
-
 [ -z "$PRV_HOST_FILE" ] && echo "**Missing required hosts file" && echo "" && clt usage provision && exit 1
 [ ! -f "$PRV_HOST_FILE" ] && fail "Invalid hosts file path"
 yq e 'true' "$PRV_HOST_FILE" &>/dev/null || fail "Invalid host file. Not a YAML file."
@@ -199,7 +185,6 @@ yq e 'true' "$PRV_HOST_FILE" &>/dev/null || fail "Invalid host file. Not a YAML 
 [ ! -d "$PRV_TEMPLATES_DIR" ] && fail "Invalid templates dir"
 
 export PRV_TARGET="$1"
-
 [ -z "$PRV_TARGET" ] && fail "Missing required argument: <target>"
 
 validate_target "$PRV_TARGET"
