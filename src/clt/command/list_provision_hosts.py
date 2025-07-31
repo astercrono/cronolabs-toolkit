@@ -1,9 +1,11 @@
 import sys
 import os
 import yaml
+from argparse import ArgumentParser
 from typing import Any
 from tabulate import tabulate
 from icmplib import ping
+from tqdm import tqdm
 
 _Node = dict[str, Any]
 _GroupedNodes = dict[str, list[_Node]]
@@ -39,30 +41,45 @@ def group_by_parent(host_data: _Node) -> _GroupedNodes:
 
         if parent and parent in grouped_data:
             target_data["name"] = target_name
-            target_data["alive"] = ping(
-                target_data["hostname"], count=1, privileged=False
-            ).is_alive
+            # target_data["alive"] = is_alive
             grouped_data[parent].append(target_data)
 
     return grouped_data
 
 
+def ping_hostname(hostname: str) -> str:
+    if ping(hostname, count=1, privileged=False).is_alive:
+        return "Y"
+    return "N"
+
+
 if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("-p", "--ping", default=False, action="store_true")
+    args, _ = parser.parse_known_args()
+
     host_filepath: str = os.environ["PRV_HOST_FILE"]
     host_data: dict[str, Any] | None = load_file(host_filepath)
 
     if not host_data:
         sys.exit(1)
 
-    table_data: list[tuple[str, str, str, str, str]] = []
+    table_data: list[tuple[str, str, str, str, str, str]] = []
     grouped_data: _GroupedNodes = group_by_parent(host_data)
 
-    for target_name, target_data in host_data.items():
+    # TODO: This is kind of yucky
+    for target_name, target_data in tqdm(
+        host_data.items(), desc="Processing targets", leave=False
+    ):
         if "parent" in target_data:
             continue
 
+        target_hostname = target_data["hostname"]
         children: list[_Node] = grouped_data[target_name]
-        is_alive = ping(target_data["hostname"], count=1, privileged=False).is_alive
+        is_alive: str = "--"
+
+        if args.ping:
+            is_alive = ping_hostname(target_hostname)
 
         table_data.append(
             (
@@ -70,17 +87,32 @@ if __name__ == "__main__":
                 "",
                 target_data["description"],
                 target_data["type"],
-                str(is_alive),
+                target_hostname,
+                is_alive,
             )
         )
 
         for child in children:
+            child_hostname: str = child["hostname"]
+            child_alive: str = "--"
+
+            if args.ping:
+                child_alive: str = ping_hostname(child_hostname)
+
             table_data.append(
-                ("", child["name"], child["description"], child["type"], child["alive"])
+                (
+                    "",
+                    child["name"],
+                    child["description"],
+                    child["type"],
+                    child_hostname,
+                    child_alive,
+                )
             )
 
     print(
         tabulate(
-            table_data, headers=["Target", "Child", "Description", "Type", "Alive"]
+            table_data,
+            headers=["Target", "Child", "Description", "Type", "Hostname", "Alive"],
         )
     )

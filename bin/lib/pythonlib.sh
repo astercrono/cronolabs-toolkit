@@ -16,6 +16,8 @@ EOF
 export -f module_exists
 
 function pyrun() {
-	uv run python -m "$APP_NAME.$1"
+	export mod="$1"
+	shift
+	uv run python -m "$APP_NAME.$mod" $@
 }
 export -f pyrun

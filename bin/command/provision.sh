@@ -88,7 +88,17 @@ function is_active() {
 }
 
 function list_targets() {
-	echo "File: $PRV_HOST_FILE"
+	while [ $# -gt 0 ]; do
+		case "$1" in
+		--ping)
+			ping_mode=true
+			shift
+			;;
+		esac
+		shift
+	done
+
+	echo "Host File: $PRV_HOST_FILE"
 	echo "--------------------------------------------------"
 
 	previous_target=""
@@ -105,7 +115,7 @@ function list_targets() {
 		printf "%-6s %s\n" "Desc:" "$target_description"
 		printf "%-6s %s\n" "Host:" "$target_hostname"
 		printf "%-6s %s\n" "Type:" "$target_type"
-		printf "%-6s %s\n" "Active:" "$(is_active $target_hostname)"
+		[[ $ping_mode == true ]] && printf "%-6s %s\n" "Active:" "$(is_active $target_hostname)"
 
 		while IFS= read sub_target; do
 			echo ""
@@ -119,7 +129,7 @@ function list_targets() {
 			printf "      %-15s %s\n" "Description:" "$sub_target_description"
 			printf "      %-15s %s\n" "Hostname:" "$sub_target_hostname"
 			printf "      %-15s %s\n" "Type:" "$sub_target_type"
-			printf "      %-15s %s\n" "Active:" "$(is_active $sub_target_hostname)"
+			[[ $ping_mode == true ]] && printf "      %-15s %s\n" "Active:" "$(is_active $sub_target_hostname)"
 		done < <(yq "to_entries[] | select(.value.parent == \"$target\") | .key" "$PRV_HOST_FILE")
 
 		previous_target="$target"
@@ -143,11 +153,26 @@ trap handle_sigint SIGINT
 
 case "$1" in
 list)
-	if [[ "$2" == "--table" ]]; then
-		pyrun "command.list_provision_hosts"
-	else
-		list_targets
-	fi
+	shift
+
+	table_mode=false
+
+	for arg in "$@"; do
+		if [[ "$arg" == "--table" ]]; then
+			table_mode=true
+			break
+		fi
+	done
+
+	case $table_mode in
+	true)
+		pyrun "command.list_provision_hosts" $@
+		;;
+	false)
+		list_targets $@
+		;;
+	esac
+
 	exit 0
 	;;
 info) ;;
