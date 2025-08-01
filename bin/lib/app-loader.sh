@@ -222,4 +222,6 @@ elif ! echo "$APP_COMMANDS" | yq -e ".commands.$command" >/dev/null 2>&1; then
 	echo "Unknown command: $command" && list && exit 1
 fi
 
+source "$APP_BIN/lib/provisionlib.sh"
+
 run_cmd $@
